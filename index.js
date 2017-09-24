@@ -23,11 +23,37 @@ app.get('/', function(request, response) {
   response.render('pages/index');
 });
 
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
 // Gets all the entries in the DB
 app.get('/:db/select', function(request, response) {
 	var path = request.params.db+"/entries";
+	responseList = [];
 	firebase.database().ref(path).once("value", function(snapshot) {
-		response.send(snapshot);
+		for (var key in snapshot.val()) {
+			var singleObj = {};
+			singleObj['key'] = key
+			singleObj['value'] = snapshot.val()[key];
+  			responseList.push(singleObj);
+		}
+		response.send(shuffle(responseList));
 	});
 });
 
@@ -35,7 +61,7 @@ app.get('/:db/select', function(request, response) {
 app.get('/:db/selectKey/:key', function(request, response) {
 	var path = request.params.db+"/entries/"+request.params.key;
 	firebase.database().ref(path).once('value').then(function(snapshot) {
-		response.send(snapshot);
+		response.send(snapshot.val());
 	});
 });
 
